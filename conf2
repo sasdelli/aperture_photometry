@@ -1,0 +1,74 @@
+# Declare the catalog variables
+
+catalog
+
+RA               2
+error(RA)        3
+DEC              4
+error(DEC)       5
+g                6
+error(g)         7
+r                8
+error(r)         9
+i                10
+error(i)         11
+
+# Declare the observations file variables
+
+observations
+
+TG            3              # time of observation in filter G
+XG            4              # airmass in filter G
+xG            5              # x coordinate in filter G
+yG            6              # y coordinate in filter G
+mG            7              # instrumental magnitude in filter G
+error(mG)     8              # magnitude error in filter G
+
+TR            10             # time of observation in filter R
+XR            11             # airmass in filter R
+xR            12             # x coordinate in filter R
+yR            13             # y coordinate in filter R
+mR            14             # instrumental magnitude in filter R
+error(mR)     15             # magnitude error in filter R
+
+TI            17             # time of observation in filter I
+XI            18             # airmass in filter I
+xI            19             # x coordinate in filter I
+yI            20             # y coordinate in filter I
+mI            21             # instrumental magnitude in filter I
+error(mI)     22             # magnitude error in filter I
+
+TZ            24             # time of observation in filter Z
+XZ            25             # airmass in filter Z
+xZ            26             # x coordinate in filter Z
+yZ            27             # y coordinate in filter Z
+mZ            28             # instrumental magnitude in filter Z
+error(mZ)     29             # magnitude error in filter Z
+
+TU            31             # time of observation in filter U
+XU            32             # airmass in filter U
+xU            33             # x coordinate in filter U
+yU            34             # y coordinate in filter U
+mU            35             # instrumental magnitude in filter U
+error(mU)     36             # magnitude error in filter U
+
+# Sample transformation section for the Landolt UBVRI system
+
+transformation
+
+fit   G1=0.5, G2=0.5
+GFIT : mG = g+G1+G2*(g-r)
+
+fit   R1=0.5, R2=0.5
+RFIT : mR = r+R1+R2*(g-r)
+
+fit I1=0.5, I2=0.5
+IFIT : mI= i+I1+I2*(g-i)
+
+#fit U1=0.5, U2=0.5
+#UFIT : mU= u+U1+U2*(u-g)
+#
+#fit Z1=0.5, Z2=0.5
+#ZFIT : mZ= z+Z1+Z2*(i-z)
+
+
