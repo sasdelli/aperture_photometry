@@ -28,13 +28,33 @@ def write_file_list(string_in=''):
     outfile = open('./imagelist','w'); outfile.write("\n".join(file_list) + '\n'); outfile.close()
     return
 
+def run_sextractor_daofind(imagelist):
+    import subprocess
+    file_list = loadtxt(imagelist,dtype='str')
+    for f in file_list:
+        subprocess.call("sex -c daofind.sex %s" % (f), shell=True)
+        subprocess.call("mv test.cat %s.coo.1" % (f), shell=True)
+    return
+
+
 def fix_headers(string_in=''):
     file_list = glob.glob('./*'+string_in+'*.fits');file_list.sort()
     for name in file_list:
         fix_header(name)
     return
 
-################
+def find_band(date, band='G'):
+    """ This finds the fits file with G band.
+    """
+    import pyfits
+    file_list = glob.glob('*'+date+'*.fits');file_list.sort()
+    for fits_file in file_list:
+        hdulist = pyfits.open(fits_file)
+        prihdr = hdulist[0].header
+        filter = prihdr['filter1']
+        if filter == band:
+            file_band = fits_file
+    return file_band
 
 def fix_header(fits_file):
     """ This changes the name of the filter in the header.
@@ -67,7 +87,7 @@ def fix_header(fits_file):
 #
 
 
-def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars_file='standard_stars_file.dat', out_nobsfile='final_obsout', header_line=5, SN_coord=None, dist_treshold = 0.0004, sel_3D=True ):
+def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars_file='standard_stars.dat', out_nobsfile='final_obsout', header_line=5, SN_coord=None, dist_treshold = 0.0004, sel_3D=True ):
     '''- fits_file is the full path of the reference fits file.
     - save_location is the directory in which the output will be saved.
     - nobsfile is the full path of the nobsfile.
@@ -105,28 +125,11 @@ def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars
     obsout_file = nobsfile
     gri_file = standard_stars_file
 
-
-    #################
-
     if os.path.isfile(fits_file) == True: 
-
         w = WCS(fits_file)
         ##
         obsout = genfromtxt(obsout_file,dtype=None, missing_values='INDEF')
         gri = genfromtxt(gri_file,dtype=None, missing_values='INDEF', skip_header=header_line-1,names=True)
-        
-        #gri_SN = zeros(size(list(gri[0])))
-        #gri_SN[:] = nan
-        #gri_SN = list(gri_SN)
-        #print '################################'
-        #print gri_SN
-        #gri_SN[0] = 'SN'
-        #gri_SN[1] = SN_coord[0]
-        #gri_SN[3] = SN_coord[1]
-        #gri_SN = tuple(gri_SN)
-        #gri = list(gri)
-        #gri.append(gri_SN)
-        #gri = array(gri)
 
         ##
         def marker_size_(in_mag):
@@ -203,18 +206,11 @@ def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars
                 dist_ = ( sqrt(sum(array([(lon[j] - gri['RA'][i])*cos_dec  ,   lat[j] - gri['dec'][i]])**2)) )
                 if dist_ < dist_treshold:
                     if not sel_3D or res_[ii] < 4.*sigma_res:
-                        print res_[ii]
-                        print sigma_res
                         indexes_gri_new.append(i)
                         indexes_obsout.append(j)
                 distances.append(dist_)
                 ii+=1
             indexes_gri = indexes_gri_new
-
-            #print '### ##################'
-            #print sigma_res
-            #print res_
-            #print '### ##################'
 
         indexes_obsout_SN = nan
         j = indx1[index_list_SN[0]]
@@ -224,7 +220,6 @@ def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars
             #indexes_gri.append(i)
             indexes_obsout_SN = j
 
-        #
         figure()
         hist(distances,1000,label='catalog stars')
         plot([dist_ ,dist_],[0,1],'g', linewidth=10, label='SN')
@@ -252,27 +247,10 @@ def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars
         savefig(save_location+'out3.pdf')
         #
         figure()
-        #valuesA_=[]
-        #valuesB_=[]
         for i in indexes_gri:
             j = indx1[index_list[i]]
             plot( obsout['f6'][j],gri[index_band][i],'bo')
-
-            #valuesA_.append(obsout['f6'][j])
-            #valuesB_.append(gri[index_band][i])
-
         savefig(save_location+'out4.pdf')
-        #print '###################'
-        #valuesA_=array(valuesA_);valuesB_=array(valuesB_) 
-        #print median(abs(valuesA_- valuesB_ - median(valuesA_ - valuesB_)))
-
-        #print abs(valuesA_- valuesB_ - median(valuesA_ - valuesB_))
-
-
-
-        #figure.close()
-        
-        ## Change NaN to INDEF
         
         ## Save final_obsout            
 
