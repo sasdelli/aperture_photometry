@@ -6,7 +6,7 @@ file_2 = '_61_1_1_1.fits'
 SN_RA = 96.7124 
 SN_dec = 59.0840
 
-fwhmpsf=8
+fwhmpsf=7
 
 make_clean()
 write_file_list(date)
@@ -30,7 +30,7 @@ match_Stars(fits_file=file_name, save_location='./', nobsfile='./obsout',
 
 iraf.fitparams(observations='final_obsout_'+file_name,
                catalogs='standard_stars.dat', config='conf2',
-               parameters='fitparams_output', interactive='yes')
+               parameters='fitparams_output', interactive='no')
 
 iraf.invertfit(observations='final_obsout_'+file_name, config='conf2',
                parameters='fitparams_output', calib='final_phot_'+date+'_'+str(fwhmpsf))

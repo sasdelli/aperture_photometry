@@ -1,7 +1,7 @@
 from astropy.coordinates import ICRS
 from astropy import units as u
 from astropy.wcs import WCS
-from numpy import loadtxt, shape, mean, sort, savetxt, size, genfromtxt, copy, nan, nanmax, nanmin, isnan, sqrt, array, cos, pi, zeros
+from numpy import loadtxt, shape, mean, sort, savetxt, size, genfromtxt, copy, nan, nanmax, nanmin, isnan, sqrt, array, cos, pi, zeros, median
 from pylab import figure
 from matplotlib.pyplot import plot, savefig, xlabel, ylabel, scatter, axis, xlim, fill_between, hist, gca, legend
 import os
@@ -56,9 +56,18 @@ def fix_header(fits_file):
              hdulist.flush()
     return
 
+#def match_Stars_band(nobsfile='./obsout', standard_stars_file='standard_stars_file.dat', out_nobsfile='final_obsout', SN_coord=None, dist_treshold=0.0003, header_line=1, band='G'):
+#
+#    
+#    if SN_coord!=None:
+#        
+#
+#    match_Stars(fits_file=fits_file, nobsfile=nobsfile, standard_stars_file=standard_stars_file, out_nobsfile=out_nobsfile, SN_coord=SN_coord, dist_treshold=dist_treshold, header_line=header_line)
+#    return 
+#
 
 
-def match_Stars(fits_file, save_location, nobsfile, standard_stars_file, out_nobsfile, header_line=5, SN_coord=None, dist_treshold = 0.0004 ):
+def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars_file='standard_stars_file.dat', out_nobsfile='final_obsout', header_line=5, SN_coord=None, dist_treshold = 0.0004, sel_3D=True ):
     '''- fits_file is the full path of the reference fits file.
     - save_location is the directory in which the output will be saved.
     - nobsfile is the full path of the nobsfile.
@@ -88,6 +97,10 @@ def match_Stars(fits_file, save_location, nobsfile, standard_stars_file, out_nob
     phot_band = prihdr['filter1']
     index_band = phot_band.lower()
     print phot_band
+
+    if SN_coord==None:
+        SN_c = ICRS(prihdr['RA']+prihdr['DEC'], unit = (u.hourangle, u.degree))
+        SN_coord = [SN_c.ra.degree, SN_c.dec.degree]
 
     obsout_file = nobsfile
     gri_file = standard_stars_file
@@ -168,6 +181,41 @@ def match_Stars(fits_file, save_location, nobsfile, standard_stars_file, out_nob
                 indexes_obsout.append(j)
             distances.append(dist_)
 
+        if sel_3D:
+
+            valuesA_=[]
+            valuesB_=[]
+            for i in indexes_gri:
+                j = indx1[index_list[i]]
+                valuesA_.append(obsout['f6'][j])
+                valuesB_.append(gri[index_band][i])
+            valuesA_=array(valuesA_);valuesB_=array(valuesB_) 
+            sigma_res =  median(abs(valuesA_- valuesB_ - median(valuesA_ - valuesB_)))
+            res_ =  abs(valuesA_- valuesB_ - median(valuesA_ - valuesB_))
+    
+            indexes_gri_new = []
+            indexes_obsout = []
+            distances=[]
+            ii=0
+            for i in indexes_gri:
+                j = indx1[index_list[i]]
+                cos_dec = cos(lat[j]*pi/(180.))
+                dist_ = ( sqrt(sum(array([(lon[j] - gri['RA'][i])*cos_dec  ,   lat[j] - gri['dec'][i]])**2)) )
+                if dist_ < dist_treshold:
+                    if not sel_3D or res_[ii] < 4.*sigma_res:
+                        print res_[ii]
+                        print sigma_res
+                        indexes_gri_new.append(i)
+                        indexes_obsout.append(j)
+                distances.append(dist_)
+                ii+=1
+            indexes_gri = indexes_gri_new
+
+            #print '### ##################'
+            #print sigma_res
+            #print res_
+            #print '### ##################'
+
         indexes_obsout_SN = nan
         j = indx1[index_list_SN[0]]
         cos_dec = cos(lat[j]*pi/(180.))
@@ -204,10 +252,24 @@ def match_Stars(fits_file, save_location, nobsfile, standard_stars_file, out_nob
         savefig(save_location+'out3.pdf')
         #
         figure()
+        #valuesA_=[]
+        #valuesB_=[]
         for i in indexes_gri:
             j = indx1[index_list[i]]
             plot( obsout['f6'][j],gri[index_band][i],'bo')
+
+            #valuesA_.append(obsout['f6'][j])
+            #valuesB_.append(gri[index_band][i])
+
         savefig(save_location+'out4.pdf')
+        #print '###################'
+        #valuesA_=array(valuesA_);valuesB_=array(valuesB_) 
+        #print median(abs(valuesA_- valuesB_ - median(valuesA_ - valuesB_)))
+
+        #print abs(valuesA_- valuesB_ - median(valuesA_ - valuesB_))
+
+
+
         #figure.close()
         
         ## Change NaN to INDEF
