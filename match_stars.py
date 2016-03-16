@@ -29,6 +29,7 @@ def write_file_list(string_in=''):
     return
 
 def run_sextractor_daofind(imagelist):
+    # from http://tdc-www.harvard.edu/wcstools/sextractor/
     import subprocess
     file_list = loadtxt(imagelist,dtype='str')
     for f in file_list:
@@ -76,17 +77,6 @@ def fix_header(fits_file):
              hdulist.flush()
     return
 
-#def match_Stars_band(nobsfile='./obsout', standard_stars_file='standard_stars_file.dat', out_nobsfile='final_obsout', SN_coord=None, dist_treshold=0.0003, header_line=1, band='G'):
-#
-#    
-#    if SN_coord!=None:
-#        
-#
-#    match_Stars(fits_file=fits_file, nobsfile=nobsfile, standard_stars_file=standard_stars_file, out_nobsfile=out_nobsfile, SN_coord=SN_coord, dist_treshold=dist_treshold, header_line=header_line)
-#    return 
-#
-
-
 def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars_file='standard_stars.dat', out_nobsfile='final_obsout', header_line=5, SN_coord=None, dist_treshold = 0.0004, sel_3D=True ):
     '''- fits_file is the full path of the reference fits file.
     - save_location is the directory in which the output will be saved.
@@ -101,15 +91,6 @@ def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars
     
     The output is four images showing the matched stars plus 'final_obsout', which is the nobsfile with the star names
     in place.'''
-    
-    ################# 
-    # "indexes_gri" and "indexes_obsout" are the corresponding indexes in the "gri" and "obsout" file
-    #
-    #  inputs
-    #fits_file = location  # fits file
-    #phot_band =                           # band to be used from obsout file
-    #index_band = 'f5'                           # index in the gri file that correspond to the phot_band
-
 
     import pyfits
     hdulist = pyfits.open(fits_file)
@@ -206,6 +187,22 @@ def match_Stars(fits_file, save_location='./', nobsfile='obsout', standard_stars
                 dist_ = ( sqrt(sum(array([(lon[j] - gri['RA'][i])*cos_dec  ,   lat[j] - gri['dec'][i]])**2)) )
                 if dist_ < dist_treshold:
                     if not sel_3D or res_[ii] < 4.*sigma_res:
+                        indexes_gri_new.append(i)
+                        indexes_obsout.append(j)
+                distances.append(dist_)
+                ii+=1
+            indexes_gri = indexes_gri_new
+
+            indexes_gri_new = []
+            indexes_obsout = []
+            distances=[]
+            ii=0
+            for i in indexes_gri:
+                j = indx1[index_list[i]]
+                cos_dec = cos(lat[j]*pi/(180.))
+                dist_ = ( sqrt(sum(array([(lon[j] - gri['RA'][i])*cos_dec  ,   lat[j] - gri['dec'][i]])**2)) )
+                if dist_ < dist_treshold:
+                    if not sel_3D or res_[ii] < 3.*sigma_res:
                         indexes_gri_new.append(i)
                         indexes_obsout.append(j)
                 distances.append(dist_)
