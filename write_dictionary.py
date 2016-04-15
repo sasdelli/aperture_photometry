@@ -18,6 +18,11 @@ for i in glob.glob('h_e_'+date+'*.fits'):
     imagelist[i]['dannulus']=10
 write_file_list(date)
 
+input_dict={}
+input_dict['images']=imagelist
+input_dict['SN_RA']=SN_RA
+input_dict['SN_DEC']=SN_dec
+input_dict['date']=date
 
-json.dump(imagelist, open(date+"_input_dict.txt",'w'), indent=2)
+json.dump(input_dict, open("input_dict.txt",'w'), indent=2)
 

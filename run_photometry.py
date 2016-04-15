@@ -1,15 +1,13 @@
 import json
 from match_stars import *
 
-date ='20120905'
-
-SN_RA = 96.7124 
-SN_dec = 59.0840
-
-#fwhmpsf=7
-
 make_clean()
-imagelist = json.load(open(date+"_input_dict.txt"))
+
+input_dict = json.load(open("input_dict.txt"))
+date = input_dict['date']
+SN_RA = input_dict['SN_RA']
+SN_dec = input_dict['SN_DEC']
+imagelist = input_dict['images']
 write_file_list(date)
 fix_headers(date)
 iraf.daophot()
@@ -36,7 +34,7 @@ iraf.mknobsfile(photfiles='*mag.1*', idfilters='G,R,I,Z,U',
 file_name = find_band(date, band='G')
 
 match_Stars(fits_file=file_name, out_nobsfile='final_obsout_'+file_name,
-            SN_coord=[SN_RA, SN_dec], dist_treshold=0.0003)
+            SN_coord=[SN_RA, SN_dec], dist_treshold=0.0003, header_line=1)
 
 iraf.fitparams(observations='final_obsout_'+file_name,
                catalogs='standard_stars.dat', config='conf2',
