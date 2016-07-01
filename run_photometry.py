@@ -47,14 +47,16 @@ iraf.mknobsfile(photfiles='*mag.1*', idfilters='G,R,I,Z,U',
                 imsets='shortnames', observations='obsout')
 file_name = find_band(date, band='G')
 
+# Match the stars in the fits files with the catalog stars.
 match_Stars(fits_file=file_name, out_nobsfile='final_obsout_'+file_name,
             SN_coord=[SN_RA, SN_dec], dist_treshold=0.0003, header_line=1)
 
+# Fit the photometries.
 iraf.fitparams(observations='final_obsout_'+file_name,
                catalogs='standard_stars.dat', config='conf2',
                parameters='fitparams_output', interactive='no')
-
 iraf.invertfit(observations='final_obsout_'+file_name, config='conf2',
                parameters='fitparams_output', calib='final_phot_'+date ) #+'_'+str(fwhmpsf))
+
 
 
